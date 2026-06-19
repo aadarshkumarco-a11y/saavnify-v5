@@ -167,6 +167,62 @@ export interface ThemeState {
   dynamicColors: boolean;
 }
 
+// ---- AirBeats-style Style Enums (ported) ----
+
+/** Full-screen player visual style (maps AirBeats PlayerScreenStyle) */
+export type PlayerStyle =
+  | 'classic'      // default existing
+  | 'modern'       // sleek dark
+  | 'spotify'      // spotify-inspired
+  | 'liquid'       // fluid gradients
+  | 'cloudglow'    // soft glowing cloud
+  | 'frost'        // frosted glass
+  | 'fold'         // folded card
+  | 'groove'       // circular vinyl
+  | 'popsy'        // colorful pop
+  | 'minimal'      // ultra minimal
+  | 'paper';       // paper-flat
+
+/** Home screen layout style */
+export type HomeStyle = 'classic' | 'playful' | 'neon' | 'spotify';
+
+/** Library screen layout style */
+export type LibraryStyle = 'classic' | 'playful' | 'neon';
+
+/** Mini player style */
+export type MiniPlayerStyle = 'classic' | 'neon';
+
+/** Slider style */
+export type SliderStyle = 'default' | 'squiggly';
+
+/** Audio quality preference */
+export type AudioQuality = 'auto' | 'high' | 'low';
+
+/** Library view type */
+export type LibraryViewType = 'list' | 'grid';
+
+/** App settings (persisted) */
+export interface AppSettings {
+  playerStyle: PlayerStyle;
+  homeStyle: HomeStyle;
+  libraryStyle: LibraryStyle;
+  miniPlayerStyle: MiniPlayerStyle;
+  sliderStyle: SliderStyle;
+  audioQuality: AudioQuality;
+  libraryView: LibraryViewType;
+  persistentQueue: boolean;
+  skipSilence: boolean;
+  audioNormalization: boolean;
+  autoLoadMore: boolean;
+  autoSkipOnError: boolean;
+  stopMusicOnTaskClear: boolean;
+  showLikeButton: boolean;
+  showDownloadButton: boolean;
+  lyricsProvider: 'lrclib' | 'kugou' | 'youtube' | 'auto';
+  dynamicColors: boolean;
+  language: string;
+}
+
 // ---- User Types ----
 
 export interface UserProfile {
@@ -394,4 +450,4 @@ export interface YouTubePlaylistItem {
 
 // ---- Navigation Types ----
 
-export type TabName = 'home' | 'search' | 'library' | 'profile';
+export type TabName = 'home' | 'search' | 'library' | 'profile' | 'explore' | 'new-releases' | 'history' | 'stats' | 'listen-together' | 'backup' | 'settings';

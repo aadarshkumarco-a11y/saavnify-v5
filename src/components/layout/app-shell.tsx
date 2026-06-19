@@ -5,7 +5,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import type { TabName } from '@/types';
 import { BottomNav } from './bottom-nav';
 import { MiniPlayer } from './mini-player';
-import { FullPlayer } from './full-player';
+import { FullPlayerRouter } from './full-player-router';
 import { YouTubePlayer } from '@/components/player/youtube-player';
 import { usePlayerStore } from '@/stores/player-store';
 
@@ -162,7 +162,7 @@ export function AppShell({ children }: AppShellProps) {
       <BottomNav activeTab={activeTab} onTabChange={handleTabChange} />
 
       {/* Full Player Overlay */}
-      <FullPlayer
+      <FullPlayerRouter
         isOpen={isFullPlayerOpen}
         onClose={() => setFullPlayerOpen(false)}
       />

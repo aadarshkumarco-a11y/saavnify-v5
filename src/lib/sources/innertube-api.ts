@@ -642,3 +642,189 @@ export async function searchInnertubeByCategory(
   const result = await searchInnertube(query, limit);
   return result.tracks;
 }
+
+// ============================================================
+// PUBLIC API — Explore / New Releases / Related / Next (Radio)
+// Ported from AirBeats innertube/pages/* modules.
+// All use the ANDROID_VR client via the configured proxy.
+// ============================================================
+
+interface InnertubeResponse {
+  contents?: any;
+  continuationContents?: any;
+  [k: string]: any;
+}
+
+// Safe wrapper around the existing typed innertubePost<T> — returns null on
+// any error instead of throwing, so the new explore/related/artist/album
+// helpers degrade gracefully.
+async function safeInnertubePost(endpoint: string, body: Record<string, any>): Promise<InnertubeResponse | null> {
+  try {
+    return await innertubePost<InnertubeResponse>(endpoint, body);
+  } catch {
+    return null;
+  }
+}
+
+// Extract tracks from a list of "musicResponsiveListItemRenderer" nodes
+function extractTracksFromItems(items: any[]): Track[] {
+  const tracks: Track[] = [];
+  for (const item of items) {
+    try {
+      const r = item.musicResponsiveListItemRenderer || item;
+      const videoId =
+        r.overlay?.musicItemThumbnailOverlayRenderer?.content?.musicPlayButtonRenderer?.playNavigationEndpoint?.watchEndpoint?.videoId ||
+        r.playlistItemData?.videoId ||
+        r.flexColumns?.[0]?.musicResponsiveListItemFlexColumnRenderer?.text?.runs?.find((x: any) => x.navigationEndpoint?.watchEndpoint?.videoId)?.navigationEndpoint?.watchEndpoint?.videoId;
+      if (!videoId) continue;
+      const titleRuns = r.flexColumns?.[0]?.musicResponsiveListItemFlexColumnRenderer?.text?.runs || [];
+      const subtitleRuns = r.flexColumns?.[1]?.musicResponsiveListItemFlexColumnRenderer?.text?.runs || [];
+      const title = titleRuns.map((x: any) => x.text).join('') || 'Unknown';
+      const artist = subtitleRuns.map((x: any) => x.text).join(' ').trim() || 'Unknown artist';
+      const thumb = r.thumbnail?.musicThumbnailRenderer?.thumbnail?.thumbnails?.pop()?.url || '';
+      tracks.push({
+        id: `yt-${videoId}`,
+        videoId,
+        title,
+        artist,
+        thumbnail: thumb,
+        duration: 0,
+        channelTitle: artist,
+        addedAt: Date.now(),
+        source: 'youtube',
+      });
+    } catch {}
+  }
+  return tracks;
+}
+
+function extractAlbumsFromItems(items: any[]): Album[] {
+  const albums: Album[] = [];
+  for (const item of items) {
+    try {
+      const r = item.musicTwoRowItemRenderer || item.musicResponsiveListItemRenderer || item;
+      const title = r.title?.runs?.[0]?.text || r.subtitle?.runs?.[0]?.text || 'Unknown album';
+      const playlistId =
+        r.navigationEndpoint?.browseEndpoint?.browseId ||
+        r.title?.runs?.[0]?.navigationEndpoint?.browseEndpoint?.browseId || '';
+      const thumb = r.thumbnailRenderer?.musicThumbnailRenderer?.thumbnail?.thumbnails?.pop()?.url || '';
+      const artist = r.subtitle?.runs?.map((x: any) => x.text).join(' ').trim() || '';
+      albums.push({
+        id: playlistId || `al-${albums.length}`,
+        playlistId,
+        title,
+        artist,
+        thumbnail: thumb,
+      });
+    } catch {}
+  }
+  return albums;
+}
+
+/** Explore — YouTube Music "explore" tab (charts, moods, new releases) */
+export async function getInnertubeExplore(): Promise<{
+  newReleases: Album[];
+  topTracks: Track[];
+}> {
+  const data = await safeInnertubePost('explore', {});
+  const tabs = data?.contents?.tabbedSearchResultsRenderer?.tabs || [];
+  const newReleases: Album[] = [];
+  const topTracks: Track[] = [];
+  for (const tab of tabs) {
+    const sections = tab.tabRenderer?.content?.sectionListRenderer?.contents || [];
+    for (const s of sections) {
+      const car = s.musicCarouselShelfRenderer;
+      if (!car) continue;
+      const items = car.contents || [];
+      if (car.header?.musicCarouselShelfBasicHeaderRenderer?.title?.runs?.[0]?.text?.toLowerCase().includes('new')) {
+        newReleases.push(...extractAlbumsFromItems(items));
+      } else {
+        topTracks.push(...extractTracksFromItems(items.map((i: any) => i.musicResponsiveListItemRenderer || {}).filter(Boolean)));
+      }
+    }
+  }
+  return { newReleases, topTracks };
+}
+
+/** New Releases — albums newly released on YouTube Music */
+export async function getInnertubeNewReleases(limit = 20): Promise<Album[]> {
+  const data = await safeInnertubePost('new_releases', { limit });
+  const items = data?.contents?.sectionListRenderer?.contents?.[0]?.gridRenderer?.items || [];
+  return extractAlbumsFromItems(items).slice(0, limit);
+}
+
+/** Related — "related" artists/tracks for a given video */
+export async function getInnertubeRelated(videoId: string): Promise<Track[]> {
+  const data = await safeInnertubePost('next', { videoId, watchEndpoint: { videoId } });
+  const items =
+    data?.contents?.singleColumnMusicWatchResultsRenderer?.tabbedRenderer?.watchNextTabbedResultsRenderer?.tabs?.[0]?.tabRenderer
+      ?.content?.musicQueueRenderer?.content?.playlistPanelRenderer?.contents || [];
+  return extractTracksFromItems(
+    items
+      .map((i: any) => i.playlistPanelVideoRenderer || i.musicResponsiveListItemRenderer || {})
+      .filter((x: any) => Object.keys(x).length > 0)
+  );
+}
+
+/** Next — "radio" mode: get a continuous playlist based on a seed video */
+export async function getInnertubeRadio(videoId: string, limit = 25): Promise<Track[]> {
+  const data = await safeInnertubePost('radio', { videoId, limit });
+  const items = data?.contents?.playlistPanelRenderer?.contents || [];
+  return extractTracksFromItems(
+    items.map((i: any) => i.playlistPanelVideoRenderer || {}).filter((x: any) => Object.keys(x).length > 0)
+  ).slice(0, limit);
+}
+
+/** Artist page — top songs + albums for a channel */
+export async function getInnertubeArtist(channelId: string): Promise<{
+  artist: Artist;
+  topTracks: Track[];
+  albums: Album[];
+}> {
+  const data = await safeInnertubePost('artist', { channelId });
+  const sections = data?.contents?.singleColumnBrowseResultsRenderer?.tabs?.[0]?.tabRenderer?.content?.sectionListRenderer?.contents || [];
+  let topTracks: Track[] = [];
+  let albums: Album[] = [];
+  let name = 'Unknown artist';
+  let thumb = '';
+  let subs = '';
+  const header = data?.header?.musicImmersiveHeaderRenderer;
+  if (header) {
+    name = header.title?.runs?.[0]?.text || name;
+    thumb = header.thumbnail?.musicThumbnailRenderer?.thumbnail?.thumbnails?.pop()?.url || '';
+    subs = header.subscriptionButton?.subscribeButtonRenderer?.subscriberCountText?.runs?.[0]?.text || '';
+  }
+  for (const s of sections) {
+    const car = s.musicCarouselShelfRenderer;
+    if (!car) continue;
+    const items = car.contents || [];
+    if (car.header?.musicCarouselShelfBasicHeaderRenderer?.title?.runs?.[0]?.text?.toLowerCase().includes('song')) {
+      topTracks = extractTracksFromItems(items.map((i: any) => i.musicResponsiveListItemRenderer || {}).filter((x: any) => Object.keys(x).length > 0));
+    } else {
+      albums = extractAlbumsFromItems(items);
+    }
+  }
+  return {
+    artist: { id: channelId, channelId, name, thumbnail: thumb, subscriberCount: subs, description: '' },
+    topTracks,
+    albums,
+  };
+}
+
+/** Album page — tracks in an album (playlistId = OLAK5uy_... or browseId) */
+export async function getInnertubeAlbum(browseId: string): Promise<{ album: Album; tracks: Track[] }> {
+  const data = await safeInnertubePost('album', { browseId });
+  const items =
+    data?.contents?.singleColumnBrowseResultsRenderer?.tabs?.[0]?.tabRenderer?.content?.sectionListRenderer?.contents?.[0]
+      ?.musicShelfRenderer?.contents || [];
+  const tracks = extractTracksFromItems(items.map((i: any) => i.musicResponsiveListItemRenderer || {}).filter((x: any) => Object.keys(x).length > 0));
+  const header = data?.header?.musicDetailHeaderRenderer || data?.header?.musicEditablePlaylistDetailHeaderRenderer;
+  const album: Album = {
+    id: browseId,
+    playlistId: browseId,
+    title: header?.title?.runs?.[0]?.text || 'Unknown album',
+    artist: header?.subtitle?.runs?.map((x: any) => x.text).join(' ').trim() || '',
+    thumbnail: header?.thumbnail?.croppedSquareThumbnailRenderer?.thumbnail?.thumbnails?.pop()?.url || '',
+  };
+  return { album, tracks };
+}
