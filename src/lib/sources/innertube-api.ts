@@ -18,7 +18,7 @@ const SOURCE: SourceType = 'youtube';
 // ---- Proxy Configuration ----
 // Default: same Cloudflare Worker that AirBeats uses for Listen Together.
 // Override at runtime via setInnertubeProxyUrl() if you deploy your own.
-let PROXY_BASE = 'https://saavnify-innertube.workers.dev';
+let PROXY_BASE = 'https://saavnify-v5.aadarshkumar-co.workers.dev';
 
 export function setInnertubeProxyUrl(url: string): void {
   PROXY_BASE = url.replace(/\/$/, '');
