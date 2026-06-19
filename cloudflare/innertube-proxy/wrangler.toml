@@ -1,0 +1,14 @@
+name = "saavnify-innertube"
+main = "worker.js"
+compatibility_date = "2025-01-01"
+
+# After `wrangler deploy`, copy the resulting URL
+# (e.g. https://saavnify-innertube.<your-sub>.workers.dev)
+# and paste it into src/lib/sources/innertube-api.ts as the default PROXY_BASE,
+# OR call setInnertubeProxyUrl('<url>') at runtime from your app's entry point.
+
+# Optional: restrict the worker to a custom domain
+# [env.production]
+# routes = [
+#   { pattern = "innertube.saavnify.app/*", zone_name = "saavnify.app" }
+# ]
