@@ -39,6 +39,7 @@ import {
   searchByMood,
   getNewReleases,
 } from '@/lib/music-aggregator';
+import { BrowseAllSection } from '@/components/tabs/browse-all-section';
 import type { Track, Artist } from '@/types';
 
 // ---- Indian Music Mood Pills ----
@@ -1013,6 +1014,11 @@ export function HomeTab() {
             </motion.div>
           )}
         </motion.div>
+      </LazySection>
+
+      {/* ===== BROWSE ALL (expanded library) ===== */}
+      <LazySection className="mb-7">
+        <BrowseAllSection />
       </LazySection>
 
       {/* ===== NEW RELEASES INDIA ===== */}

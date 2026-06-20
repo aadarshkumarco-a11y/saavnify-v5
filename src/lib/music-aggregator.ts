@@ -830,3 +830,101 @@ export async function getNewReleases(limit: number = 20): Promise<Track[]> {
 
   return [];
 }
+
+// ============================================================
+// EXPANDED LIBRARY — many more content fetchers
+// (regional Indian, international, decades, moods, devotional)
+// Each reuses the unified search pipeline with curated queries.
+// ============================================================
+
+/** Generic helper: search across all sources for a query, return tracks. */
+async function searchCurated(query: string, limit = 20): Promise<Track[]> {
+  try {
+    const result = await unifiedSearch(query, limit);
+    return result.tracks;
+  } catch {
+    return [];
+  }
+}
+
+// ---- Regional Indian (beyond Bollywood/Punjabi) ----
+export async function getTamilHits(limit = 20) { return searchCurated('tamil hits songs kollywood 2024', limit); }
+export async function getTeluguHits(limit = 20) { return searchCurated('telugu hits songs tollywood 2024', limit); }
+export async function getMarathiHits(limit = 20) { return searchCurated('marathi songs hits latest', limit); }
+export async function getBengaliHits(limit = 20) { return searchCurated('bengali songs hits latest tollywood', limit); }
+export async function getKannadaHits(limit = 20) { return searchCurated('kannada hits songs sandalwood', limit); }
+export async function getMalayalamHits(limit = 20) { return searchCurated('malayalam hits songs mollywood', limit); }
+export async function getGujaratiHits(limit = 20) { return searchCurated('gujarati songs hits latest', limit); }
+export async function getHaryanviHits(limit = 20) { return searchCurated('haryanvi songs hits latest', limit); }
+export async function getBhojpuriHits(limit = 20) { return searchCurated('bhojpuri songs hits latest', limit); }
+export async function getRajasthaniHits(limit = 20) { return searchCurated('rajasthani songs hits latest', limit); }
+export async function getAssameseHits(limit = 20) { return searchCurated('assamese songs hits latest', limit); }
+export async function getOdiaHits(limit = 20) { return searchCurated('odia songs hits latest', limit); }
+
+// ---- Indian Classical & Devotional ----
+export async function getIndianClassical(limit = 20) { return searchCurated('indian classical music raga sitar tabla', limit); }
+export async function getBhajans(limit = 20) { return searchCurated('bhajan bhakti songs hindi devotional', limit); }
+export async function getGurbani(limit = 20) { return searchCurated('gurbani shabad kirtan sikh devotional', limit); }
+export async function getSufi(limit = 20) { return searchCurated('sufi music qawwali hindi urdu', limit); }
+export async function getGhazals(limit = 20) { return searchCurated('ghazal urdu hindi jagjit singh ghulam ali', limit); }
+
+// ---- Moods ----
+export async function getPartyHindi(limit = 20) { return searchCurated('party songs hindi bollywood dance', limit); }
+export async function getSadHindi(limit = 20) { return searchCurated('sad songs hindi emotional bollywood', limit); }
+export async function getRomanticHindi(limit = 20) { return searchCurated('romantic songs hindi love bollywood', limit); }
+export async function getRoadTrip(limit = 20) { return searchCurated('road trip songs hindi travel', limit); }
+export async function getMorningPlaylist(limit = 20) { return searchCurated('morning playlist hindi fresh start', limit); }
+export async function getNightPlaylist(limit = 20) { return searchCurated('night playlist hindi chill sleep', limit); }
+export async function getFocusStudy(limit = 20) { return searchCurated('focus study music instrumental lofi', limit); }
+export async function getDanceHindi(limit = 20) { return searchCurated('dance songs hindi bollywood dj party', limit); }
+
+// ---- Decades ----
+export async function get90sBollywood(limit = 20) { return searchCurated('90s bollywood hindi songs old hits', limit); }
+export async function get2000sBollywood(limit = 20) { return searchCurated('2000s bollywood hindi songs hits', limit); }
+export async function get2010sBollywood(limit = 20) { return searchCurated('2010s bollywood hindi songs hits', limit); }
+export async function getOldIsGold(limit = 20) { return searchCurated('old hindi songs golden era mukesh rafi kishore', limit); }
+export async function getRetroBollywood(limit = 20) { return searchCurated('retro hindi songs old bollywood 70s 80s', limit); }
+
+// ---- International ----
+export async function getEnglishPop(limit = 20) { return searchCurated('english pop songs hits 2024', limit); }
+export async function getEnglishHits(limit = 20) { return searchCurated('top english songs hits billboard', limit); }
+export async function getGlobalHits(limit = 20) { return searchCurated('global top hits songs 2024', limit); }
+export async function getKPop(limit = 20) { return searchCurated('kpop korean pop songs hits bts blackpink', limit); }
+export async function getLatinHits(limit = 20) { return searchCurated('latin music spanish hits reggaeton', limit); }
+export async function getEDM(limit = 20) { return searchCurated('edm electronic dance music festival', limit); }
+export async function getHipHop(limit = 20) { return searchCurated('hip hop rap songs hits 2024', limit); }
+export async function getRnB(limit = 20) { return searchCurated('rnb r&b soul songs hits', limit); }
+export async function getRock(limit = 20) { return searchCurated('rock songs hits classic alternative', limit); }
+export async function getJazz(limit = 20) { return searchCurated('jazz music smooth instrumental classic', limit); }
+export async function getCountry(limit = 20) { return searchCurated('country music songs hits', limit); }
+export async function getReggae(limit = 20) { return searchCurated('reggae music songs bob marley', limit); }
+
+// ---- Indie & Alternative ----
+export async function getIndieHindi(limit = 20) { return searchCurated('indie india hindi alternative music prateek kuhar', limit); }
+export async function getIndieEnglish(limit = 20) { return searchCurated('indie alternative english songs', limit); }
+export async function getAcoustic(limit = 20) { return searchCurated('acoustic songs covers hindi english', limit); }
+export async function getBollywoodAcoustic(limit = 20) { return searchCurated('bollywood acoustic cover songs unplugged', limit); }
+
+// ---- Special Collections ----
+export async function getTopArtists2024(limit = 20) { return searchCurated('top artists 2024 hits arijit singh', limit); }
+export async function getArijitSingh(limit = 20) { return searchCurated('arijit singh songs hits bollywood', limit); }
+export async function getAtifAslam(limit = 20) { return searchCurated('atif aslam songs hits bollywood', limit); }
+export async function getShreyaGhoshal(limit = 20) { return searchCurated('shreya ghoshal songs hits bollywood', limit); }
+export async function getDiljitDosanjh(limit = 20) { return searchCurated('diljit dosanjh songs hits punjabi', limit); }
+export async function getSidhuMooseWala(limit = 20) { return searchCurated('sidhu moose wala songs punjabi hits', limit); }
+export async function getAPDhillon(limit = 20) { return searchCurated('ap dhillon songs punjabi brownprint', limit); }
+export async function getNehaKakkar(limit = 20) { return searchCurated('neha kakkar songs hits bollywood', limit); }
+export async function getJubinNautiyal(limit = 20) { return searchCurated('jubin nautiyal songs hits bollywood', limit); }
+export async function getPritam(limit = 20) { return searchCurated('pritam songs hits bollywood music director', limit); }
+export async function getVishalShekhar(limit = 20) { return searchCurated('vishal shekhar songs hits bollywood', limit); }
+export async function getARRahman(limit = 20) { return searchCurated('a r rahman songs hits bollywood tamil', limit); }
+
+// ---- Podcasts & Spoken (curated) ----
+export async function getHindiPodcasts(limit = 20) { return searchCurated('hindi podcast episodes stories', limit); }
+export async function getMotivationalHindi(limit = 20) { return searchCurated('motivational hindi speech sandeep maheshwari', limit); }
+
+// ---- Festive & Seasonal ----
+export async function getHoliSongs(limit = 20) { return searchCurated('holi songs hindi bollywood festival', limit); }
+export async function getDiwaliSongs(limit = 20) { return searchCurated('diwali songs hindi festival celebration', limit); }
+export async function getWeddingSongs(limit = 20) { return searchCurated('wedding songs hindi bollywood sangeet', limit); }
+export async function getIndependenceDay(limit = 20) { return searchCurated('independence day india patriotic songs hindi', limit); }
